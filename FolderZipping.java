@@ -9,26 +9,22 @@ import java.util.zip.ZipOutputStream;
 
 public class FolderZipping {
     List fileList;
-    private static final String outputZipFile = "/Users/ahmadalghizi/Desktop/Assignment_3.zip";
-    private static final String srcFolder = "/Users/ahmadalghizi/Desktop/Assignment_3";
+    private String outputZipFile;
+    private String srcFolder;
     FolderZipping(){
         fileList = new ArrayList();
-    }
-    public static void main( String[] args )
-    {
-        FolderZipping appZip = new FolderZipping();
-        appZip.generateFileList(new File(srcFolder));
-        appZip.zipIt(outputZipFile);
+        srcFolder = "";
+        outputZipFile = "";
     }
     //zips to file location
     public void zipIt(String zipFile){
+        //C:\Users\HP\Desktop\School\Fall 2020\Astro
+        //C:\Users\HP\Desktop\School\Fall 2020\Astro.zip
         byte[] buffer = new byte[1024];
         try{
             FileOutputStream fos = new FileOutputStream(zipFile);
             ZipOutputStream zos = new ZipOutputStream(fos);
-            System.out.println("Output to Zip: " + zipFile);
             for(Object file : this.fileList){
-                System.out.println("File Added : " + file);
                 ZipEntry ze= new ZipEntry((String) file);
                 zos.putNextEntry(ze);
                 FileInputStream in =
@@ -40,14 +36,19 @@ public class FolderZipping {
                 in.close();
             }
             zos.closeEntry();
-
             zos.close();
-            System.out.println("Finished!");
         }catch(IOException ex){
             ex.printStackTrace();
         }
     }
 
+    public void emptyFileList(){
+        fileList.clear();
+    }
+
+    public void setDirectory(String directory){
+        srcFolder = directory;
+    }
     //this function traverses the given directory and obtains all the files and adds the files into the FileList, the paramter is the directory
     public void generateFileList(File node){
         //add file only

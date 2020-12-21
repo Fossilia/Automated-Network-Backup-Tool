@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -5,17 +6,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class FileZipping {
-    public static void main(String[] args) {
-        FileZipping.zipFile();
-    }
-    public static void zipFile() {
+    public static void zipFile(String filePath) {
         byte[] buffer = new byte[1024];
         try{
-            FileOutputStream fos = new FileOutputStream("/Users/ahmadalghizi/Desktop/test.zip");
+            FileOutputStream fos = new FileOutputStream(filePath+".zip");
             ZipOutputStream zos = new ZipOutputStream(fos);
-            ZipEntry ze= new ZipEntry("testing1.txt");
+            File file = new File(filePath);
+            ZipEntry ze= new ZipEntry(file.getName());
             zos.putNextEntry(ze);
-            FileInputStream in = new FileInputStream("/Users/ahmadalghizi/Desktop/test.txt");
+            FileInputStream in = new FileInputStream(filePath);
             int len;
             while ((len = in.read(buffer)) > 0) {
                 zos.write(buffer, 0, len);
@@ -24,7 +23,6 @@ public class FileZipping {
             zos.closeEntry();
             //remember close it
             zos.close();
-            System.out.println("Finished!");
         }catch(IOException ex){
             ex.printStackTrace();
         }
