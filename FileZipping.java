@@ -23,7 +23,6 @@ public class FileZipping {
             }
             in.close();
             zos.closeEntry();
-            //remember close it
             zos.close();
         }catch(IOException ex){
             ex.printStackTrace();
