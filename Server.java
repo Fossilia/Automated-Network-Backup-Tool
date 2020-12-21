@@ -33,49 +33,55 @@ public class Server {
                 sock = servsock.accept();
                 System.out.println("Connected to client: " + sock);
 
-                //-----------------------receive message from client----------------------------
                 dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
                 raw_message = dis.readUTF();
                 split_message = raw_message.split(" ");
 
+                //creating backups folder
+                String addr = sock.getInetAddress().toString().substring(1);
+                String date = Calendar.getInstance().getTime().toString().replace(":", "-");
+                File dateFolder = new File("ServerFiles\\"+addr+"\\"+date);
+                dateFolder.mkdirs();
+
                 //if the client wants to transfer files
                 if(split_message[0].equals("FILE_TRANSFER")){
-                    System.out.println("File name recieved: "+ raw_message);
-                    String filename = split_message[1];
+                    //System.out.println(split_message.length);
+                    for (int i = 1; i < split_message.length; i++) {
+                        System.out.println(i);
+                        System.out.println("File name recieved: "+ split_message[i]);
+                        String filename = split_message[i];
 
-                    // receive backup
-                    byte [] byte_data  = new byte [602238600];
-                    InputStream is = sock.getInputStream();
+                        // receive backup
+                        byte [] byte_data  = new byte [602238600];
+                        InputStream is = sock.getInputStream();
 
-                    //creating backups folder
-                    String addr = sock.getInetAddress().toString().substring(1);
-                    String date = Calendar.getInstance().getTime().toString().replace(":", "-");
-                    File dateFolder = new File("ServerFiles\\"+addr+"\\"+date);
-                    dateFolder.mkdirs();
+                        fos = new FileOutputStream(dateFolder.getPath()+"\\"+filename); //save the file
+                        bos = new BufferedOutputStream(fos);
+                        bytesRead = is.read(byte_data,0,byte_data.length);
+                        current = bytesRead;
 
-                    fos = new FileOutputStream(dateFolder.getPath()+"\\"+filename);
-                    bos = new BufferedOutputStream(fos);
-                    bytesRead = is.read(byte_data,0,byte_data.length);
-                    current = bytesRead;
-
-                    do {
-                        bytesRead = is.read(byte_data, current, (byte_data.length-current));
-                        if(bytesRead >= 0){
-                            current += bytesRead;
+                        do {
+                            bytesRead = is.read(byte_data, current, (byte_data.length-current)); //load bytes into file
+                            if(bytesRead >= 0){
+                                current += bytesRead;
+                            }
                         }
+                        while(bytesRead > -1);
+
+                        bos.write(byte_data, 0 , current);
+                        bos.flush();
+
+                        System.out.println("file recieved");
+                        is.close();
                     }
-                    while(bytesRead > -1);
 
-                    bos.write(byte_data, 0 , current);
-                    bos.flush();
-
-                    System.out.println("Submission recieved from "+ filename);
-                    is.close();
                 }
                 else if(split_message[0].equals("REQUEST_BACKUP")){
                     String backup_requested = split_message[1];
                     //recieve file
                 }
+                //-----------------------receive message from client----------------------------
+
 
                 fos.close();
                 bos.close();

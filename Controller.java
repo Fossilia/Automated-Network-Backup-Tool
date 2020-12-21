@@ -209,7 +209,7 @@ public class Controller {
                 System.out.println("Incorrect input, please try again");
             }
         }
-        client.start(serverIP);
+        client.start(serverIP); //started the client backup process
         System.out.println("Backup service started");
         /*while(true){
             displayFiles();
