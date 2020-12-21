@@ -1,3 +1,5 @@
+package com.segmentationfault;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -8,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Vector;
+import java.util.*;
 
 import static java.lang.Character.isDigit;
 import static java.lang.Character.isISOControl;
@@ -29,12 +28,17 @@ public class Controller {
         sc = new Scanner(System.in);
         counter = new int[3];
         folderZipping = new FolderZipping();
-        Client client = new Client();
+        client = new Client();
     }
 
     public void startApplication() throws IOException, InterruptedException {
         File appInfo = new File("applicationInfo");
         if (appInfo.exists()){
+            List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
+            String [] serverIP_split =  allLines.get(0).split(" ");
+            serverIP = serverIP_split[serverIP_split.length-1];
+            client.start(serverIP);
+            System.out.println("Backup service started");
             displayMenu();
         }
         else{
@@ -206,6 +210,10 @@ public class Controller {
             }
         }
         client.start(serverIP);
+        System.out.println("Backup service started");
+        /*while(true){
+            displayFiles();
+        }*/
     }
 
     private boolean isNumber(String s)

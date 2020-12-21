@@ -1,3 +1,5 @@
+package com.segmentationfault;
+
 public class Sleeper {
 
     private int time;
