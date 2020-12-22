@@ -19,7 +19,9 @@ public class Client {
     String server_ip;
     File fileToSend;
 
-    public Client(){}
+    public Client(){
+
+    }
 
     public void start(String ip, int lineNum) throws IOException, InterruptedException {
         System.out.println("1");
@@ -42,14 +44,13 @@ public class Client {
         t1.start();
     }
 
-    public void startSleeper(){
-
-    }
 
     public void runBackupProcess(int lineNum) throws InterruptedException, IOException {
         List<String> allLines = null;
         while(true){
+
             sock = new Socket(server_ip, 55588);
+            System.out.println("SOCKET OPEN");
             //System.out.println("Connecting...");
             dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
             //System.out.println("Connected.");
@@ -57,12 +58,21 @@ public class Client {
             try {
                 allLines = Files.readAllLines(Paths.get("applicationInfo"));
                 sendFile(allLines.get(lineNum));
-                sock.close();
+                //sock.close();
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    try {
+                        sock.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            int time = Integer.parseInt(allLines.get(0).split(" ")[1]);
-            Thread.sleep(10000);
+            String counterNum = allLines.get(lineNum + 1);
+            int time = Integer.parseInt(counterNum.split(" ")[1]);
+            //int time = Integer.parseInt(allLines.get(0).split(" ")[1]);
+            Thread.sleep(time);
         }
     }
 
