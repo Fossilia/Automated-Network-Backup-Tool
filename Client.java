@@ -21,13 +21,16 @@ public class Client {
 
     public Client(){}
 
-    public void start(String ip) throws IOException, InterruptedException {
+    public void start(String ip, int lineNum) throws IOException, InterruptedException {
+        System.out.println("1");
         server_ip = ip;
+        List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    runBackupProcess();
+                    runBackupProcess(lineNum);
+                    System.out.println("2");
                 } catch (InterruptedException e) {
                     System.out.println("Run Backup failed");
                 } catch (IOException e) {
@@ -43,9 +46,8 @@ public class Client {
 
     }
 
-    public void runBackupProcess() throws InterruptedException, IOException {
+    public void runBackupProcess(int lineNum) throws InterruptedException, IOException {
         List<String> allLines = null;
-
         while(true){
             sock = new Socket(server_ip, 55588);
             //System.out.println("Connecting...");
@@ -54,26 +56,18 @@ public class Client {
 
             try {
                 allLines = Files.readAllLines(Paths.get("applicationInfo"));
-                int counter = 1;
-                for (String line : allLines){
-                    if (counter >= 3) {
-                        sendFile(line);
-                    }
-                    counter++;
-                }
-
+                sendFile(allLines.get(lineNum));
                 sock.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             int time = Integer.parseInt(allLines.get(0).split(" ")[1]);
-            Thread.sleep(2000);
+            Thread.sleep(10000);
         }
     }
 
     private void sendFile(String filepath){
         try {
-
             // send file
             //----------------sending file name------------------------------------
             dos = new DataOutputStream(new BufferedOutputStream(sock.getOutputStream()));

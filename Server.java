@@ -51,13 +51,14 @@ public class Server {
                 if(split_message[0].equals("FILE_TRANSFER")){
                     System.out.println("File name recieved: "+ raw_message);
                     String filename = split_message[1];
-
+                    String folder_name = filename.split("\\.")[0];
                     // receive backup
                     byte [] byte_data  = new byte [602238600];
                     InputStream is = sock.getInputStream();
                     String addr = sock.getInetAddress().toString().substring(1);
                     String date = Calendar.getInstance().getTime().toString().replace(":", "-");
-                    File dateFolder = new File("ServerFiles\\"+addr+"\\"+date);
+
+                    File dateFolder = new File("ServerFiles\\"+addr+"\\"+folder_name+"\\"+folder_name+"_"+date);
                     dateFolder.mkdirs();
                     fos = new FileOutputStream(dateFolder.getPath()+"\\"+filename);
                     bos = new BufferedOutputStream(fos);

@@ -29,6 +29,7 @@ public class Controller {
         counter = new int[3];
         folderZipping = new FolderZipping();
         client = new Client();
+        System.out.println("Welcome to the Backup File Server Admin!");
     }
 
     public void startApplication() throws IOException, InterruptedException {
@@ -38,7 +39,12 @@ public class Controller {
             List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
             String serverIPLine = allLines.get(0);
             serverIP = serverIPLine.split(" ")[1];
-            client.start(serverIP);
+            System.out.println(serverIP);
+            int counter = 0;
+            for (String line: allLines){
+                if (counter >= 2) client.start(serverIP, counter);
+                counter++;
+            }
             displayMenu();
             System.out.println(Calendar.getInstance().getTime());
         }
@@ -47,8 +53,7 @@ public class Controller {
         }
     }
 
-    private void displayMenu() throws IOException {
-        System.out.println("Welcome to the Backup File Server Admin!");
+    private void displayMenu() throws IOException, InterruptedException {
         while (true) {
             System.out.println("What would you like to do?\n" +
                     "1. Add more files to back up on the server\n" +
@@ -64,6 +69,12 @@ public class Controller {
             if (choice == 1) {
                 displayFiles();
                 addFileDirectories();
+                getBackUpInterval();
+                List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
+                String serverIPLine = allLines.get(0);
+                serverIP = serverIPLine.split(" ")[1];
+                //client.start(serverIP);
+
             } else if (choice == 2) {
                 displayFiles();
                 retrieveFile();
@@ -89,37 +100,36 @@ public class Controller {
     private void addFileDirectories() throws IOException {
         Path filePath = Paths.get("applicationInfo");
         String directory = "";
-        while (true){
-            System.out.println("Enter the ABSOLUTE PATH of the file/directory that you would like to back up (Enter exit to quit): ");
-            directory = sc.nextLine();
-            Path path = Paths.get(directory);
-            if (directory.toLowerCase().equals("exit")) break;
-            else {
-                if (Files.exists(path)) {
-                    File file = new File(directory);
-                    if (file.isDirectory()) {
-                        folderZipping.setDirectory(directory);
-                        folderZipping.emptyFileList();
-                        folderZipping.generateFileList(new File(directory));
-                        String outputZipFile = directory + ".zip";
-                        folderZipping.zipIt(outputZipFile);
-                        System.out.println("Successfully created zip file " + outputZipFile);
-                        Files.write(filePath, outputZipFile.getBytes(), StandardOpenOption.APPEND);
 
-                    }
-                    else {
-                        if (!alreadyExists(directory)) {
-                            FileZipping.zipFile(directory);
-                            directory = directory+".zip\n";
-                            Files.write(filePath, directory.getBytes(), StandardOpenOption.APPEND);
-                        }
-                        else{
-                            System.out.println("Directory already exists");
-                        }
-                    }
-                } else {
-                    System.out.println("Directory does not exist, please try again");
+        System.out.println("Enter the ABSOLUTE PATH of the file/directory that you would like to back up (Enter exit to quit): ");
+        directory = sc.nextLine();
+        Path path = Paths.get(directory);
+        if (directory.toLowerCase().equals("exit"));
+        else {
+            if (Files.exists(path)) {
+                File file = new File(directory);
+                if (file.isDirectory()) {
+                    folderZipping.setDirectory(directory);
+                    folderZipping.emptyFileList();
+                    folderZipping.generateFileList(new File(directory));
+                    String outputZipFile = directory + ".zip";
+                    folderZipping.zipIt(outputZipFile);
+                    System.out.println("Successfully created zip file " + outputZipFile);
+                    Files.write(filePath, outputZipFile.getBytes(), StandardOpenOption.APPEND);
+
                 }
+                else {
+                    if (!alreadyExists(directory)) {
+                        FileZipping.zipFile(directory);
+                        directory = directory+".zip\n";
+                        Files.write(filePath, directory.getBytes(), StandardOpenOption.APPEND);
+                    }
+                    else{
+                        System.out.println("Directory already exists");
+                    }
+                }
+            } else {
+                System.out.println("Directory does not exist, please try again");
             }
         }
     }
@@ -167,7 +177,6 @@ public class Controller {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
-        System.out.println("Welcome to the Backup File Server Admin!");
 
         try{
             FileWriter myWriter = new FileWriter("applicationInfo");
@@ -192,9 +201,9 @@ public class Controller {
                     counter[1] = Integer.parseInt(timeStampInputs[1]);
                     counter[2] = Integer.parseInt(timeStampInputs[2]);
                     // Converting days:hours:minutes
-                    long days = counter[0] / 86400000;
-                    long hours = counter[1] / 3600000;
-                    long minutes = counter[2] / 1000;
+                    long days = counter[0] * 86400000;
+                    long hours = counter[1] * 3600000;
+                    long minutes = counter[2] * 60000;
                     time = days + hours + minutes;
                     //System.out.println(time);
                     String newCounterLine = "Counter: " + time;
@@ -211,7 +220,18 @@ public class Controller {
                 System.out.println("Incorrect input, please try again");
             }
         }
-        client.start(serverIP);
+        /*System.out.println("True");
+        List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
+        int lineNum = allLines.size()-1;
+        String serverIPLine = allLines.get(0);
+        serverIP = serverIPLine.split(" ")[1];
+        client.start(serverIP, lineNum);*/
+        startApplication();
+    }
+
+    private void getBackUpInterval() throws IOException {
+
+
     }
 
     private boolean isNumber(String s)
