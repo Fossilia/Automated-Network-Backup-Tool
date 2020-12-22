@@ -41,6 +41,7 @@ public class Server {
                 //file.mkdir();
 
                 System.out.println(sock.getInetAddress().toString().substring(1)+" ");
+                String addr = sock.getInetAddress().toString().substring(1);
                 //-----------------------receive file to be tested----------------------------
                 dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
                 raw_message = dis.readUTF();
@@ -55,7 +56,6 @@ public class Server {
                     // receive backup
                     byte [] byte_data  = new byte [602238600];
                     InputStream is = sock.getInputStream();
-                    String addr = sock.getInetAddress().toString().substring(1);
                     String date = Calendar.getInstance().getTime().toString().replace(":", "-");
 
                     File dateFolder = new File("ServerFiles\\"+addr+"\\"+folder_name+"\\"+folder_name+"_"+date);
@@ -81,12 +81,37 @@ public class Server {
                 }
                 else if(split_message[0].equals("REQUEST_BACKUP")){
                     String backup_requested = split_message[1];
-                    //recieve file
+                    File backupFileFolder = new File("ServerFiles\\"+addr+"\\"+backup_requested);
+
+                    System.out.println(backupFileFolder.getPath());
+
+                    File backupFileFolder2 = backupFileFolder.listFiles()[backupFileFolder.listFiles().length-1];
+                    System.out.println(backupFileFolder2.getPath());
+                    File backupFile = backupFileFolder2.listFiles()[0];
+                    System.out.println("File name requested: "+ raw_message);
+
+                    //send file
+                    byte [] byte_data  = new byte [(int)backupFile.length()];
+                    fis = new FileInputStream(backupFile);
+                    bis = new BufferedInputStream(fis);
+                    bis.read(byte_data,0,byte_data.length);
+                    os = sock.getOutputStream();
+                    os.write(byte_data,0,byte_data.length);
+                    os.flush();
+
+                    fis.close();
+                    bis.close();
+                    os.close();
+                    //dos.close();
+
+                    System.out.println("File "+backupFile.getName()+" was sent.");
                 }
 
                 fos.close();
                 bos.close();
                 sock.close();
+
+                System.out.println("-----------------------------------------------------");
             }
         } catch (IOException e) {
             e.printStackTrace();

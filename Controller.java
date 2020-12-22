@@ -149,19 +149,19 @@ public class Controller {
     }
 
     private void retrieveFile() {
-        ArrayList<String> requestedFiles = new ArrayList<>();
         while (true) {
             System.out.println("Enter the number beside the file that you would like to retrieve (type 0 to exit): ");
             String input = sc.nextLine();
             int choice = 0;
             try {
                 List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
-                if (!isNumber(input) || (choice = Integer.parseInt(input)) > (allLines.size() - 2) || choice < 0 || requestedFiles.contains(allLines.get(choice+1))) {
+                if (!isNumber(input) || (choice = Integer.parseInt(input)) > (allLines.size() - 2) || choice < 0 ) {
                     System.out.println("Incorrect input, please try again");
                 }
                 else{
                     if (choice == 0) break;
-                    requestedFiles.add(allLines.get(choice+1));
+                    client.startReceivingFile(allLines.get(choice+1));
+                    //requestedFiles.add(allLines.get(choice+1));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

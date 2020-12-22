@@ -1,7 +1,7 @@
 package com.segmentationfault;
 
-import java.awt.*;
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -17,14 +17,13 @@ public class Client {
     DataOutputStream dos;
     DataInputStream dis;
     String server_ip;
-    File fileToSend;
+    File fileToRecieve;
 
     public Client(){
 
     }
 
     public void start(String ip, int lineNum) throws IOException, InterruptedException {
-        System.out.println("1");
         server_ip = ip;
         List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
         Thread t1 = new Thread(new Runnable() {
@@ -32,7 +31,6 @@ public class Client {
             public void run() {
                 try {
                     runBackupProcess(lineNum);
-                    System.out.println("2");
                 } catch (InterruptedException e) {
                     System.out.println("Run Backup failed");
                 } catch (IOException e) {
@@ -50,7 +48,6 @@ public class Client {
         while(true){
 
             sock = new Socket(server_ip, 55588);
-            System.out.println("SOCKET OPEN");
             //System.out.println("Connecting...");
             dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
             //System.out.println("Connected.");
@@ -82,15 +79,15 @@ public class Client {
             //----------------sending file name------------------------------------
             dos = new DataOutputStream(new BufferedOutputStream(sock.getOutputStream()));
             //System.out.println("Sending filename:");
-            fileToSend = new File(filepath);
-            dos.writeUTF("FILE_TRANSFER "+fileToSend.getName()); //the files name to be sent with the command
+            fileToRecieve = new File(filepath);
+            dos.writeUTF("FILE_TRANSFER "+ fileToRecieve.getName()); //the files name to be sent with the command
             dos.flush();
             //System.out.println("filename of ["+fileToSend.getName()+"] sent.");
 
             //-------------------------sending file----------------------------
             //fileToSend = new File("C:\\Users\\Faisal\\Documents\\GitHub\\Automated-network-backup-tool\\src\\com\\segmentationfault\\ClientFiles\\testfile.mp4");
-            byte [] byte_data  = new byte [(int)fileToSend.length()];
-            fis = new FileInputStream(fileToSend);
+            byte [] byte_data  = new byte [(int) fileToRecieve.length()];
+            fis = new FileInputStream(fileToRecieve);
             bis = new BufferedInputStream(fis);
             bis.read(byte_data,0,byte_data.length);
             os = sock.getOutputStream();
@@ -109,6 +106,95 @@ public class Client {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void startReceivingFile(String filepath){
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    receiveFile(filepath);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        t1.setDaemon(true);
+        t1.start();
+    }
+
+    public void receiveFile(String filepath) throws IOException {
+
+        FileInputStream fis;
+        BufferedInputStream bis;
+        OutputStream os;
+        sock = new Socket(server_ip, 55588);
+        DataOutputStream dos;
+        DataInputStream dis;
+        String name;
+        System.out.println(filepath);
+        System.out.println("Connecting to Page...");
+        //dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
+        dos = new DataOutputStream(new BufferedOutputStream(sock.getOutputStream()));
+        System.out.println("Connected to Page.");
+
+
+        //System.out.println("Sending filename:");
+        fileToRecieve = new File(filepath);
+        String ext = getExtension(fileToRecieve);
+        String simple_filename = getFileName(fileToRecieve);
+        dos.writeUTF("REQUEST_BACKUP "+ simple_filename); //the files name to be sent with the command
+        dos.flush();
+
+        int bytesRead;
+        int current;
+        FileOutputStream fos;
+        BufferedOutputStream bos;
+
+        byte [] mybytearray  = new byte [6022386];
+        InputStream is = sock.getInputStream();
+        fos = new FileOutputStream("RecievedClientFiles\\"+fileToRecieve.getName());
+        bos = new BufferedOutputStream(fos);
+        bytesRead = is.read(mybytearray,0,mybytearray.length);
+        current = bytesRead;
+
+        do {
+            bytesRead = is.read(mybytearray, current, (mybytearray.length-current));
+            if(bytesRead >= 0){
+                current += bytesRead;
+            }
+        }
+        while(bytesRead > -1);
+
+        bos.write(mybytearray, 0 , current);
+        bos.flush();
+
+        System.out.println("Recieved latest backup of file: "+fileToRecieve.getName());
+        is.close();
+        fos.close();
+        bos.close();
+        sock.close();
+        //dis.close();
+    }
+
+    public static String getExtension(File f){
+        String path = f.getName();
+        if(path.lastIndexOf(".")!=-1){
+            return path.substring(path.lastIndexOf(".")+1);
+        }
+        else{
+            return null;
+        }
+    }
+
+    public static String getFileName(File f){
+        String path = f.getName();
+        if(path.lastIndexOf(".")!=-1){
+            return path.substring(0, path.indexOf("."));
+        }
+        else{
+            return null;
         }
     }
 }
