@@ -23,13 +23,15 @@ public class Controller {
     private long time;
     private Client client;
     private String serverIP;
+    private int fileNum;
 
     public Controller(){
         sc = new Scanner(System.in);
-        counter = new int[3];
+        counter = new int[4];
         folderZipping = new FolderZipping();
         client = new Client();
         System.out.println("Welcome to the Backup File Server Admin!");
+        fileNum = 1;
     }
 
     public void startApplication() throws IOException, InterruptedException {
@@ -40,13 +42,14 @@ public class Controller {
             String serverIPLine = allLines.get(0);
             serverIP = serverIPLine.split(" ")[1];
             System.out.println(serverIP);
-            int counter = 0;
-            for (String line: allLines){
-                if (counter >= 2) client.start(serverIP, counter);
-                counter++;
+            int i;
+            for (i = fileNum; i < allLines.size(); i+= 2){
+                client.start(serverIP, i);
+                Thread.sleep(2000);
             }
+            fileNum = i;
             displayMenu();
-            System.out.println(Calendar.getInstance().getTime());
+            //System.out.println(Calendar.getInstance().getTime());
         }
         else{
             setApplicationEnvironment();
@@ -70,10 +73,7 @@ public class Controller {
                 displayFiles();
                 addFileDirectories();
                 getBackUpInterval();
-                List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
-                String serverIPLine = allLines.get(0);
-                serverIP = serverIPLine.split(" ")[1];
-                //client.start(serverIP);
+                startApplication();
 
             } else if (choice == 2) {
                 displayFiles();
@@ -180,7 +180,6 @@ public class Controller {
 
         try{
             FileWriter myWriter = new FileWriter("applicationInfo");
-            myWriter.write("Counter: \n");
             System.out.println("To start off, enter the IP address of the server that you would like to use: ");
             serverIP = sc.nextLine();
             myWriter.write("Server-IP-Address: " + serverIP+"\n");
@@ -191,25 +190,32 @@ public class Controller {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+        getBackUpInterval();
+        startApplication();
+    }
+
+    private void getBackUpInterval() throws IOException {
         while(true) {
-            System.out.println("How often would you like the backup to take place? Enter it in the following format: DD:HH:MM");
+            System.out.println("How often would you like the backup to take place? Enter it in the following format: DD:HH:MM:SS");
             String counterInput = sc.nextLine();
             String[] timeStampInputs = counterInput.split(":");
-            if (timeStampInputs.length==3){
-                if (isNumber(timeStampInputs[0]) && isNumber(timeStampInputs[1]) && isNumber(timeStampInputs[2])){
+            if (timeStampInputs.length==4){
+                if (isNumber(timeStampInputs[0]) && isNumber(timeStampInputs[1]) && isNumber(timeStampInputs[2]) && isNumber(timeStampInputs[3])){
                     counter[0] = Integer.parseInt(timeStampInputs[0]);
                     counter[1] = Integer.parseInt(timeStampInputs[1]);
                     counter[2] = Integer.parseInt(timeStampInputs[2]);
+                    counter[3] = Integer.parseInt(timeStampInputs[3]);
                     // Converting days:hours:minutes
                     long days = counter[0] * 86400000;
                     long hours = counter[1] * 3600000;
                     long minutes = counter[2] * 60000;
-                    time = days + hours + minutes;
+                    long seconds = counter[3] * 1000;
+                    time = days + hours + minutes + seconds;
                     //System.out.println(time);
-                    String newCounterLine = "Counter: " + time;
+                    String newCounterLine = "Counter: " + time + "\n";
                     List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
                     allLines.set(0, newCounterLine);
-                    Files.write(Paths.get("applicationInfo"), allLines, StandardCharsets.UTF_8);
+                    Files.write(Paths.get("applicationInfo"), newCounterLine.getBytes(), StandardOpenOption.APPEND);
                     break;
                 }
                 else{
@@ -220,17 +226,6 @@ public class Controller {
                 System.out.println("Incorrect input, please try again");
             }
         }
-        /*System.out.println("True");
-        List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
-        int lineNum = allLines.size()-1;
-        String serverIPLine = allLines.get(0);
-        serverIP = serverIPLine.split(" ")[1];
-        client.start(serverIP, lineNum);*/
-        startApplication();
-    }
-
-    private void getBackUpInterval() throws IOException {
-
 
     }
 
