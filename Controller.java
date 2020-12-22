@@ -34,12 +34,13 @@ public class Controller {
     public void startApplication() throws IOException, InterruptedException {
         File appInfo = new File("applicationInfo");
         if (appInfo.exists()){
+            System.out.println("Started backup service");
             List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
-            String [] serverIP_split =  allLines.get(0).split(" ");
-            serverIP = serverIP_split[serverIP_split.length-1];
+            String serverIPLine = allLines.get(0);
+            serverIP = serverIPLine.split(" ")[1];
             client.start(serverIP);
-            System.out.println("Backup service started");
             displayMenu();
+            System.out.println(Calendar.getInstance().getTime());
         }
         else{
             setApplicationEnvironment();
@@ -173,7 +174,7 @@ public class Controller {
             myWriter.write("Counter: \n");
             System.out.println("To start off, enter the IP address of the server that you would like to use: ");
             serverIP = sc.nextLine();
-            myWriter.write("Server IP Address: " + serverIP+"\n");
+            myWriter.write("Server-IP-Address: " + serverIP+"\n");
             myWriter.close();
             addFileDirectories();
         }
@@ -195,6 +196,7 @@ public class Controller {
                     long hours = counter[1] / 3600000;
                     long minutes = counter[2] / 1000;
                     time = days + hours + minutes;
+                    //System.out.println(time);
                     String newCounterLine = "Counter: " + time;
                     List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
                     allLines.set(0, newCounterLine);
@@ -209,11 +211,7 @@ public class Controller {
                 System.out.println("Incorrect input, please try again");
             }
         }
-        client.start(serverIP); //started the client backup process
-        System.out.println("Backup service started");
-        /*while(true){
-            displayFiles();
-        }*/
+        client.start(serverIP);
     }
 
     private boolean isNumber(String s)
