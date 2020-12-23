@@ -1,4 +1,3 @@
-package com.segmentationfault;
 
 public class BackupServerLauncher {
 

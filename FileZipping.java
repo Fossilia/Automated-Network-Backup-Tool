@@ -1,4 +1,4 @@
-package com.segmentationfault;
+
 
 import java.io.File;
 import java.io.FileInputStream;

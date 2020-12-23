@@ -1,4 +1,3 @@
-package com.segmentationfault;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -133,11 +132,11 @@ public class Client {
         DataOutputStream dos;
         DataInputStream dis;
         String name;
-        System.out.println(filepath);
-        System.out.println("Connecting to Page...");
+        //System.out.println(filepath);
+        //System.out.println("Connecting to Page...");
         //dis = new DataInputStream(new BufferedInputStream(sock.getInputStream()));
         dos = new DataOutputStream(new BufferedOutputStream(sock.getOutputStream()));
-        System.out.println("Connected to Page.");
+        //System.out.println("Connected to Page.");
 
 
         //System.out.println("Sending filename:");
@@ -154,7 +153,9 @@ public class Client {
 
         byte [] mybytearray  = new byte [6022386];
         InputStream is = sock.getInputStream();
-        fos = new FileOutputStream("RecievedClientFiles\\"+fileToRecieve.getName());
+        File dateFolder = new File("ReceivedClientFiles\\");
+        dateFolder.mkdirs();
+        fos = new FileOutputStream("ReceivedClientFiles\\"+fileToRecieve.getName());
         bos = new BufferedOutputStream(fos);
         bytesRead = is.read(mybytearray,0,mybytearray.length);
         current = bytesRead;

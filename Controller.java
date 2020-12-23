@@ -1,4 +1,3 @@
-package com.segmentationfault;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -61,7 +60,8 @@ public class Controller {
             System.out.println("What would you like to do?\n" +
                     "1. Add more files to back up on the server\n" +
                     "2. Request back up from the server\n" +
-                    "3. Exit\n" +
+                    "3. Change the server\n"+
+                    "4. Exit\n" +
                     "Enter the number beside the action you would like to perform:");
             String input = sc.nextLine();
             int choice = -1;
@@ -78,7 +78,11 @@ public class Controller {
             } else if (choice == 2) {
                 displayFiles();
                 retrieveFile();
-            } else break;
+            }
+            else if (choice == 3){
+                changeServer();
+            }
+            else break;
         }
 
     }
@@ -88,8 +92,8 @@ public class Controller {
         int count = 1;
         try {
             List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
-            for (String line : allLines) {
-                if (line.startsWith("C:")) System.out.println((count-2) +". " + line);
+            for (int i = 1; i < allLines.size(); i+= 2){
+                System.out.println(count + ". " + allLines.get(i));
                 count++;
             }
         } catch (IOException e) {
@@ -101,35 +105,37 @@ public class Controller {
         Path filePath = Paths.get("applicationInfo");
         String directory = "";
 
-        System.out.println("Enter the ABSOLUTE PATH of the file/directory that you would like to back up (Enter exit to quit): ");
-        directory = sc.nextLine();
-        Path path = Paths.get(directory);
-        if (directory.toLowerCase().equals("exit"));
-        else {
-            if (Files.exists(path)) {
-                File file = new File(directory);
-                if (file.isDirectory()) {
-                    folderZipping.setDirectory(directory);
-                    folderZipping.emptyFileList();
-                    folderZipping.generateFileList(new File(directory));
-                    String outputZipFile = directory + ".zip";
-                    folderZipping.zipIt(outputZipFile);
-                    System.out.println("Successfully created zip file " + outputZipFile);
-                    Files.write(filePath, outputZipFile.getBytes(), StandardOpenOption.APPEND);
+        while (true) {
+            System.out.println("Enter the ABSOLUTE PATH of the file/directory that you would like to back up (Enter exit to quit): ");
+            directory = sc.nextLine();
+            Path path = Paths.get(directory);
+            if (directory.toLowerCase().equals("exit")) break;
+            else {
+                if (Files.exists(path)) {
+                    File file = new File(directory);
+                    if (file.isDirectory()) {
+                        folderZipping.setDirectory(directory);
+                        folderZipping.emptyFileList();
+                        folderZipping.generateFileList(new File(directory));
+                        String outputZipFile = directory + ".zip";
+                        folderZipping.zipIt(outputZipFile);
+                        System.out.println("Successfully created zip file " + outputZipFile);
+                        Files.write(filePath, outputZipFile.getBytes(), StandardOpenOption.APPEND);
+                        break;
 
-                }
-                else {
-                    if (!alreadyExists(directory)) {
-                        FileZipping.zipFile(directory);
-                        directory = directory+".zip\n";
-                        Files.write(filePath, directory.getBytes(), StandardOpenOption.APPEND);
+                    } else {
+                        if (!alreadyExists(directory)) {
+                            FileZipping.zipFile(directory);
+                            directory = directory + ".zip\n";
+                            Files.write(filePath, directory.getBytes(), StandardOpenOption.APPEND);
+                            break;
+                        } else {
+                            System.out.println("Directory already exists");
+                        }
                     }
-                    else{
-                        System.out.println("Directory already exists");
-                    }
+                } else {
+                    System.out.println("Directory does not exist, please try again");
                 }
-            } else {
-                System.out.println("Directory does not exist, please try again");
             }
         }
     }
@@ -150,7 +156,7 @@ public class Controller {
 
     private void retrieveFile() {
         while (true) {
-            System.out.println("Enter the number beside the file that you would like to retrieve (type 0 to exit): ");
+            System.out.println("Enter the number beside the file that you would like to retrieve (type -1 to exit): ");
             String input = sc.nextLine();
             int choice = 0;
             try {
@@ -159,14 +165,26 @@ public class Controller {
                     System.out.println("Incorrect input, please try again");
                 }
                 else{
-                    if (choice == 0) break;
-                    client.startReceivingFile(allLines.get(choice+1));
+                    if (choice == -1) break;
+                    client.startReceivingFile(allLines.get(((choice-1)*2) + 1));
+                    Thread.sleep(500); // Sleep for 500 milli so the other thread prints its stuff first
+                    displayMenu();
                     //requestedFiles.add(allLines.get(choice+1));
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void changeServer() throws IOException, InterruptedException {
+        System.out.println("Enter the IP address of the new server that you would like to use: ");
+        serverIP = sc.nextLine();
+        List<String> allLines = Files.readAllLines(Paths.get("applicationInfo"));
+        String newServerLine = "Server-IP-Address: " + serverIP;
+        allLines.set(0, newServerLine);
+        Files.write(Paths.get("applicationInfo"), allLines, StandardCharsets.UTF_8);
+        startApplication();
     }
 
     private void setApplicationEnvironment() throws IOException, InterruptedException {
